@@ -14,20 +14,17 @@ jobs:
       - name: Stahni raylib 5.5
         run: git clone --depth 1 --branch 5.5 https://github.com/raysan5/raylib.git
 
-      - name: Najdi Android SDK a NDK
+      - name: Najdi Android SDK a NDK (prednost NDK 27)
         run: |
+          NDK_DIR="$(ls -d "$ANDROID_HOME"/ndk/27.* 2>/dev/null | sort -V | tail -1 || true)"
+          if [ -z "$NDK_DIR" ]; then NDK_DIR="$ANDROID_NDK_LATEST_HOME"; fi
           echo "ANDROID_SDK=$ANDROID_HOME" >> "$GITHUB_ENV"
-          echo "ANDROID_NDK=$ANDROID_NDK_LATEST_HOME" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK=$NDK_DIR" >> "$GITHUB_ENV"
           echo "SDK: $ANDROID_HOME"
-          echo "NDK: $ANDROID_NDK_LATEST_HOME"
+          echo "NDK: $NDK_DIR"
+          ls "$ANDROID_HOME/ndk" || true
 
-      - name: Zkompiluj raylib pro Android (arm64)
-        run: |
-          cd raylib/src
-          make PLATFORM=PLATFORM_ANDROID ANDROID_NDK="$ANDROID_NDK_LATEST_HOME" ANDROID_ARCH=arm64 ANDROID_API_VERSION=29
-          ls -lh libraylib.a
-
-      - name: Sestav APK
+      - name: Sestav APK (raylib se kompiluje ve skriptu)
         run: |
           export RAYLIB_SRC="$PWD/raylib/src"
           bash build_android.sh
