@@ -1,0 +1,39 @@
+name: Build APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Stahni raylib 5.5
+        run: git clone --depth 1 --branch 5.5 https://github.com/raysan5/raylib.git
+
+      - name: Najdi Android SDK a NDK
+        run: |
+          echo "ANDROID_SDK=$ANDROID_HOME" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK=$ANDROID_NDK_LATEST_HOME" >> "$GITHUB_ENV"
+          echo "SDK: $ANDROID_HOME"
+          echo "NDK: $ANDROID_NDK_LATEST_HOME"
+
+      - name: Zkompiluj raylib pro Android (arm64)
+        run: |
+          cd raylib/src
+          make PLATFORM=PLATFORM_ANDROID ANDROID_NDK="$ANDROID_NDK_LATEST_HOME" ANDROID_ARCH=arm64 ANDROID_API_VERSION=29
+          ls -lh libraylib.a
+
+      - name: Sestav APK
+        run: |
+          export RAYLIB_SRC="$PWD/raylib/src"
+          bash build_android.sh
+
+      - name: Nahraj APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: complex-apk
+          path: complex.apk
